@@ -1,0 +1,94 @@
+<!-- No Doctype - Makes 100% height work for some reason. -->
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <script src="js/cli.js"></script>
+    <script src="js/paramikojs/utf8.js"></script>
+    <script src="js/paramikojs/kryptos/kryptos.js"></script>
+    <script src="js/paramikojs/kryptos/Cipher/AES.js"></script>
+    <script src="js/paramikojs/kryptos/Cipher/ARC4.js"></script>
+    <script src="js/paramikojs/kryptos/Cipher/Blowfish.js"></script>
+    <script src="js/paramikojs/kryptos/Cipher/DES3.js"></script>
+    <script src="js/paramikojs/kryptos/Hash/baseHash.js"></script>
+    <script src="js/paramikojs/kryptos/Hash/MD5.js"></script>
+    <script src="js/paramikojs/kryptos/Hash/SHA.js"></script>
+    <script src="js/paramikojs/kryptos/Hash/SHA256.js"></script>
+    <script src="js/paramikojs/kryptos/Hash/HMAC.js"></script>
+    <script src="js/paramikojs/kryptos/PublicKey/RSA.js"></script>
+    <script src="js/paramikojs/kryptos/PublicKey/DSA.js"></script>
+    <script src="js/paramikojs/kryptos/Random/_UserFriendlyRNG.js"></script>
+    <script src="js/paramikojs/kryptos/Random/Fortuna/SHAd256.js"></script>
+    <script src="js/paramikojs/kryptos/Random/Fortuna/FortunaAccumulator.js"></script>
+    <script src="js/paramikojs/kryptos/Random/Fortuna/FortunaGenerator.js"></script>
+    <script src="js/paramikojs/kryptos/Random/OSRNG/browser.js"></script>
+    <script src="js/paramikojs/common.js"></script>
+    <script src="js/paramikojs/dsskey.js"></script>
+    <script src="js/paramikojs/BigInteger.js"></script>
+    <script src="js/paramikojs/auth_handler.js"></script>
+    <script src="js/paramikojs/ber.js"></script>
+    <script src="js/paramikojs/channel.js"></script>
+    <script src="js/paramikojs/client.js"></script>
+    <script src="js/paramikojs/kex_gex.js"></script>
+    <script src="js/paramikojs/kex_group1.js"></script>
+    <script src="js/paramikojs/message.js"></script>
+    <script src="js/paramikojs/packet.js"></script>
+    <script src="js/paramikojs/pkey.js"></script>
+    <script src="js/paramikojs/python_shim.js"></script>
+    <script src="js/paramikojs/rsakey.js"></script>
+    <script src="js/paramikojs/ssh_exception.js"></script>
+    <script src="js/paramikojs/transport.js"></script>
+    <script src="js/paramikojs/util.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/wcwidth.js"></script>
+    <script src="js/misc.js"></script>
+    <script src="js/baseObserver.js"></script>
+    <script src="js/baseProtocol.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/log.js"></script>
+    <script src="js/ssh2.js"></script>
+    <script src="js/ssh2Observer.js"></script>
+    <script src="js/telnet.js"></script>
+    <script src="js/telnetCliAddons.js"></script>
+    <script src="js/telnetObserver.js"></script>
+    <link rel="stylesheet" href="css/buttons.css" type="text/css">
+    <link rel="stylesheet" href="css/drawer.css" type="text/css">
+    <link rel="stylesheet" href="css/headers.css" type="text/css">
+    <link rel="stylesheet" href="css/input_areas.css" type="text/css">
+    <link rel="stylesheet" href="css/toolbars.css" type="text/css">
+    <link rel="stylesheet" href="css/gaia-icons-embedded.css" type="text/css">
+    <link rel="stylesheet" href="css/styles.css" type="text/css">
+  </head>
+  <body>
+    <section data-type="sidebar">
+      <header>
+        <menu type="toolbar">
+          <button data-icon="add" id="add"></button>
+        </menu>
+        <h1>Servers</h1>
+      </header>
+      <nav>
+        <ul id="servers"></ul>
+      </nav>
+      <div role="toolbar">
+        <ul>
+          <li><button class="pack-icon-delete">Delete</button></li>
+        </ul>
+        <ul>
+          <li><button data-icon="edit" id="edit"></button></li>
+          <li><button data-icon="settings" id="settings"></button></li>
+        </ul>
+      </div>
+    </section>
+    <section id="drawer" role="region">
+  <header>
+    <a href="#content" data-icon="add"><span class="icon icon-menu">hide sidebar</span></a>
+    <a href="#drawer" data-icon="add" id="connect"><span class="icon icon-add">show sidebar</span></a>
+    <button data-icon="close" id="close" style="display: none;"></button>
+    <h1>Firemote</h1>
+  </header>
+  <div role="main" id="main">
+   <iframe id="cmdlog" src="blank.html"></iframe>
+  </div>
+</section>
+  </body>
+</html>

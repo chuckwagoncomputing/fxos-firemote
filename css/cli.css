@@ -1,0 +1,52 @@
+body,
+#input {
+      background-color: black;
+      font: 12px Droid Sans Mono, monospace;
+      color: #AAAAAA;
+}
+#history-outer {
+      position: relative;
+      overflow: hidden;
+}
+#history {
+      position: absolute;
+      top: 0;
+      left: 0;
+}
+#history div,
+#terminal div {
+      /*height: 14px;*/
+      white-space: nowrap;
+}
+#cursor {
+      /*height: 14px;*/
+      position: absolute;
+      top: 0;
+      left: 0;
+}
+#input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      -moz-appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      width: auto;
+}
+#input:focus {
+      outline: none;
+}
+      #selection-copied {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      margin-top: -50px;
+      margin-left: -100px;
+      width: 200px;
+      background-color: rgba(255,255,255,0.8);
+      color: black;
+      text-align: center;
+      border-radius: 3px;
+      padding: 10px 0;
+}
