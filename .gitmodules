@@ -1,0 +1,3 @@
+[submodule "js/paramikojs"]
+	path = js/paramikojs
+	url = https://github.com/chuckwagoncomputing/paramikojs
