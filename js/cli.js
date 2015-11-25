@@ -18,7 +18,9 @@
   Contributor(s):
   Siva Chandran P <siva.chandran.p@gmail.com>    (original author)
 
-  Mime Cuvalo     <mimecuvalo@gmail.com>  (translated into JS, extended and refined)
+  Mime Cuvalo     <mimecuvalo@gmail.com>         (translated into JS, extended and refined)
+
+  David Holdeman  <dave@holdemanenterprises.com> (Added telnet control)
 
   Reference: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
   
@@ -30,7 +32,7 @@
   is cleared(filled with blank spaces) and cursor positioned in the first
   row and first column.
 */
-var cli = function(contentWindow) {
+var cli = function(contentWindow, connection) {
   doc = contentWindow.document;
   this.contentWindow = contentWindow;
   this.doc           = doc;
@@ -40,12 +42,12 @@ var cli = function(contentWindow) {
   this.terminal      = doc.getElementById('terminal');
   this.cursor        = doc.getElementById('cursor');
   this.input         = doc.getElementById('input');
-  
+  this.connection    = connection;
   this.inputHasFocus = false;
 
   this.captureFontSize();
 
-  document.getElementById('cmdlog').contentWindow.addEventListener('scroll', this.updateHistoryView.bind(this), false);
+  contentWindow.addEventListener('scroll', this.updateHistoryView.bind(this), false);
   this.input.addEventListener('keydown', this.keyDown.bind(this), false);
   this.input.addEventListener('keypress', this.keyPress.bind(this), false);
   this.input.addEventListener('keyup', this.keyUp.bind(this), false);
@@ -74,7 +76,6 @@ var cli = function(contentWindow) {
   this.charHandlers[this.__ASCII_XOFF] = this.__OnCharXOFF.bind(this);
   this.charHandlers[this.__ASCII_ESC]  = this.__OnCharESC.bind(this);
   this.charHandlers[this.__ASCII_CSI]  = this.__OnCharCSI.bind(this);
-
   this.charHandlers[this.__TELNET_IAC] = this.__OnTelnetIAC.bind(this);
   
   // escape sequence handlers
@@ -162,6 +163,7 @@ cli.prototype = {
   __ASCII_ESC   : 27,   // Escape
   __ASCII_SPACE : 32,   // Space
   __ASCII_CSI   : 153,  // Control Sequence Introducer
+  __TELNET_IAC  : 255,
   
   __ESCSEQ_ICH  : '@',  // n @: Insert blanks n(default 1) times.
   __ESCSEQ_CUU  : 'A',  // n A: Moves the cursor up n(default 1) times.
@@ -380,10 +382,10 @@ cli.prototype = {
 
   keyPress : function(event) {
     if (event.keyCode == 33) { // page up
-      gCli.body.scrollTop -= gCli.body.clientHeight;
+      this.body.scrollTop -= this.body.clientHeight;
       return;
     } else if (event.keyCode == 34) { // page down
-      gCli.body.scrollTop += gCli.body.clientHeight;
+      this.body.scrollTop += this.body.clientHeight;
       return;
     }
 
@@ -402,15 +404,15 @@ cli.prototype = {
 
     if (event.ctrlKey) {
       if (event.which == 64) {   // ctrl-@
-        gConnection.output('\0');
+        this.connection.send('\0');
       } else if (event.shiftKey && event.which == 86) { // ctrl-shift-V, we remap this to ctrl-v (lowercase)
-        gConnection.output(String.fromCharCode(118 - 96));
+        this.connection.send(String.fromCharCode(118 - 96));
       } else if (event.which >= 97 && event.which <= 122) { // ctrl-[a-z]
-        gConnection.output(String.fromCharCode(event.which - 96));
+        this.connection.send(String.fromCharCode(event.which - 96));
       } else if (event.which == 27) { // ctrl-?
-        gConnection.output('\x7f');
+        this.connection.send('\x7f');
       } else {
-        gConnection.output(String.fromCharCode(event.which));
+        this.connection.send(String.fromCharCode(event.which));
       }
       return;
     }
@@ -424,7 +426,7 @@ cli.prototype = {
         return;
       }
     }
-    gConnection.output(character);
+    this.connection.send(character);
   },
 
   // this is for CJK characters, the keyPress event isn't fired so we listen for the keyup instead
@@ -433,7 +435,7 @@ cli.prototype = {
 
     if (this.input.value) {
       this.body.scrollTop = this.body.scrollHeight - this.body.clientHeight;  // scroll to bottom
-      gConnection.output(unescape(encodeURIComponent(this.input.value)));
+      this.connection.send(unescape(encodeURIComponent(this.input.value)));
       this.input.value = '';
     }
   },
@@ -529,13 +531,12 @@ cli.prototype = {
 
   update : function(message) {
     var scrollLog = this.body.scrollTop + 50 >= this.body.scrollHeight - this.body.clientHeight;
-
     try {
       this.ProcessInput(message);
       this.updateScreen(scrollLog);
     } catch (ex) {
-      debug('cursor: ' + this.curY + ' ' + this.curX);
-      debug(ex);
+      console.log('cursor: ' + this.curY + ' ' + this.curX);
+      console.log(ex);
     }
   },
 
@@ -1783,6 +1784,92 @@ cli.prototype = {
       }
     }
   },
+  
+  __OnTelnetIAC : function(text, index) {
+    var code = text.substr(index + 1, 1);
+    var value = text.substr(index + 2, 1);
+    var seq_null = String.fromCharCode(0);
+    var seq_sb   = String.fromCharCode(250);
+    var seq_se   = String.fromCharCode(240);
+    var seq_iac  = String.fromCharCode(255);
+    var seq_will = String.fromCharCode(251);
+    var seq_wont = String.fromCharCode(252);
+    var seq_do   = String.fromCharCode(253);
+    var seq_dont = String.fromCharCode(254);
+    if (code === seq_do) {
+      if(value.charCodeAt(0) === 31) {
+        this.connection.send(seq_iac + seq_will + value);
+        this.connection.send(seq_iac
+                           + seq_sb
+                           + value
+                           + String.fromCharCode(0)
+                           + String.fromCharCode(width)
+                           + String.fromCharCode(0)
+                           + String.fromCharCode(height)
+                           + seq_iac
+                           + seq_se);
+      }
+      else if (value.charCodeAt(0) === 1) {
+        this.connection.send(seq_iac + seq_wont + value);
+      }
+      else {
+        this.connection.send(seq_iac + seq_wont + value);
+      }
+      return index + 3;
+    }
+    else if (code === seq_will) {
+      if (value.charCodeAt(0) === 1) {
+        this.connection.send(seq_iac + seq_do + value);
+      }
+      return index + 3;
+    }
+    else if (code === seq_sb) {
+      if (value.charCodeAt(0) === 24) {
+        this.connection.send(seq_iac
+                           + seq_sb
+                           + value
+                           + seq_null
+                           + "xterm"
+                           + seq_iac
+                           + seq_se);
+      }
+      else if (value.charCodeAt(0) === 32) {
+        this.connection.send(seq_iac
+                           + seq_sb
+                           + value
+                           + seq_null
+                           + "38400,38400"
+                           + seq_iac
+                           + seq_se);
+      }
+      else if (value.charCodeAt(0) === 35) {
+        this.connection.send(seq_iac
+                           + seq_sb
+                           + value
+                           + seq_null
+                           + "firemote:0.0"
+                           + seq_iac
+                           + seq_se);
+      }
+      else if (value.charCodeAt(0) === 39) {
+        this.connection.send(seq_iac
+                           + seq_sb
+                           + value
+                           + seq_null
+                           + seq_null
+                           + "DISPLAY"
+                           + String.fromCharCode(1)
+                           + "firemote:0.0"
+                           + seq_iac
+                           + seq_se);
+      }
+      return  index + text.substr(index).indexOf(seq_se) + 1;
+    }
+    else {
+      console.log(code.charCodeAt(0));
+      return index + 3;
+    }
+  },
 
   xtermColors : [
     '#000000', '#c23621', '#25bc24', '#cc7920', '#492ee1',
@@ -2109,8 +2196,8 @@ cli.prototype = {
 
     this.Resize(rows, cols);
 
-    if (gConnection && gConnection.isConnected) {
-      gConnection.shell.resize_pty(cols, rows);
+    if (this.connection && this.connection.readyState === "connected") {
+      this.connection.shell.resize_pty(cols, rows);
     }
   },
 

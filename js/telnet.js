@@ -1,40 +1,23 @@
-function telnetMoz(observer) {
-  inherit(this, new baseProtocol());
-  this.observer = observer;
-}
+function telnetConnection(parent) {
+  this.host = parent.host;
+  this.port = parent.port;
+  this.socket = parent.socket;
+  this.terminalWindow = parent.terminalWindow;
+};
 
-telnetMoz.prototype = {
-  protocol : 'telnet',
-  message  : "",
-  outMessage : new ArrayBuffer(1),
-  options : {},
-  
+telnetConnection.prototype = {
   connect : function() {
-    var self = this;
-    gCli.onTerminalReset();
-    this.options.binaryType = "arraybuffer";
-    this.controlTransport = this.transportService.open(this.host, this.port, this.options);
-    this.controlTransport.onopen = function () {
-      self.onConnected();
-    };
-    this.controlTransport.ondata = function (event) {
-      self.observer.onStdin(ab2str(event.data));
-    };
-    this.controlTransport.onerror = function(event) {
-      self.observer.onError("Error, connection failed.");
-    };
-    this.controlTransport.onclose = function() {
-      self.onDisconnected();
-    };
+    this.terminalWindow.onTerminalReset();   
   },
-  
-  kill : function() {
-    this.controlTransport.close();
+  disconnect : function() {
+    this.socket.close();
   },
-  
-  output : function(msg) {
-    this.controlTransport.send(str2ab(msg));
+  onOpen : function() {},
+  onData : function(data) {
+    this.terminalWindow.update(data);
   },
-  
-  cleanup : function() { }
+  onClose : function() {},
+  send : function(out) {
+    this.socket.send(str2ab(out));
+  }
 };

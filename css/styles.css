@@ -7,7 +7,7 @@ html, body {
       overflow-x: hidden;
 }
 
-#cmdlog {
+#terminalframe {
       display: block;
       padding-top: 5em;
       width: 100%;
@@ -24,4 +24,8 @@ div[role="main"] {
 .draweritem {
       width: 90%;
       background: white;
+}
+
+.editedlist .server {
+      color: #008aaa;
 }
