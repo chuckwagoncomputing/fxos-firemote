@@ -1,4 +1,4 @@
-function Server(host, port, username, password, privateKey, type, ruid) {
+function Server(host, port, username, password, privateKey, type, ruid, hostkey) {
   this.host = host;
   this.port = port;
   this.username = username;
@@ -6,6 +6,7 @@ function Server(host, port, username, password, privateKey, type, ruid) {
   this.privateKey = privateKey;
   this.type = type;
   this.ruid = ruid;
+  this.hostkey = hostkey;
   this.socket;
   this.terminalWindow;
 };

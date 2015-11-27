@@ -4,6 +4,7 @@ function ssh2Connection(parent) {
   this.username = parent.username;
   this.password = parent.password;
   this.privateKey = parent.privateKey;
+  this.hostkey = parent.hostkey;
   this.socket = parent.socket;
   this.terminalWindow = parent.terminalWindow;
 };
@@ -11,8 +12,8 @@ function ssh2Connection(parent) {
 ssh2Connection.prototype = {
   observer : {
     version : 1,
-    onSftpCache : function() {
-      return true;
+    onSftpCache : function(buffer, new_key, cacheCallback) {
+      cacheCallback(confirm("This server has a host key we haven't seen before.\n" + new_key + "\nAccept this key?"));
     }
   },
   connect : function() {
@@ -23,8 +24,8 @@ ssh2Connection.prototype = {
     var timeout = 30;
     setTimeout(this.keepAlive.bind(this), 60000);
     this.client = new paramikojs.SSHClient();
-    this.client.set_missing_host_key_policy(paramikojs.AutoAddPolicy);
-    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, null, null);
+    this.client.set_missing_host_key_policy(new paramikojs.AskPolicy());
+    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, null, null, this.timeout, false, false, false, this.hostkey);
     this.refreshRate = 10;
   },
   disconnect : function() {

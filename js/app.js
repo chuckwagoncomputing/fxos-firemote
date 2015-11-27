@@ -3,12 +3,12 @@ var height = 24,
     activeServer,
     editedServer,
     servers = {},
-    firemoteDB = indexedDB.open('firemote-data', '2'),
+    firemoteDB = indexedDB.open('firemote-data', '3'),
     db,
     edit = false,
     publicKey,
-    privateKey;
-
+    privateKey,
+    gDebugMode = false;
 Server.prototype.protocolMap = { 'ssh2'   : ssh2Connection,
                                             'telnet' : telnetConnection};
 Server.prototype.createSocket = function() {
@@ -46,6 +46,9 @@ firemoteDB.onerror = function () {
 firemoteDB.onupgradeneeded = function (event) {
   /*----------------------------
       firemote-data changelog
+    3: added
+       servers
+       \ hostkey
     2: added
        keypair, keypath => private
        | private
@@ -64,6 +67,9 @@ firemoteDB.onupgradeneeded = function (event) {
        \ width
   --------------------------------*/
   var db = event.target.result;
+  if (db.objectStoreNames.contains('servers') && !event.target.transaction.objectStore('servers').indexNames.contains('hostkey')) {
+    db.deleteObjectStore('servers');
+  }
   if (!db.objectStoreNames.contains('servers')) {
     var store = event.currentTarget.result.createObjectStore('servers', { autoIncrement : true, keyPath : 'ruid' });
     store.createIndex('ruid', 'ruid', { unique: true });
@@ -72,6 +78,7 @@ firemoteDB.onupgradeneeded = function (event) {
     store.createIndex('type', 'type', { unique: false });
     store.createIndex('username', 'username', { unique: false });
     store.createIndex('password', 'password', { unique: false });
+    store.createIndex('hostkey', 'hostkey', { unique: false });
   }
   if (!db.objectStoreNames.contains('settings')) {
     var settings = event.currentTarget.result.createObjectStore('settings', { autoIncrement : true, keyPath : 'width' });
@@ -98,7 +105,7 @@ function loadServers() {
       request.onsuccess = function (event) {
         var serverItem = event.target.result;
         // updateServer will make a new one since one doesn't exist with this ruid.
-        updateServer(serverItem.host, serverItem.port, serverItem.type, serverItem.username, serverItem.password, serverItem.ruid);
+        updateServer(serverItem.host, serverItem.port, serverItem.type, serverItem.username, serverItem.password, serverItem.ruid, serverItem.hostkey);
         // continue starts again at request.onsuccess
         cursor.continue();
       };
@@ -181,7 +188,8 @@ function saveServer() {
                  port : document.getElementById("port").value,
                  type : document.getElementById("type").value,
                  username : document.getElementById("username").value, 
-                 password : document.getElementById("password").value };
+                 password : document.getElementById("password").value,
+                 hostkey : editedServer.hostkey};
   var store = db.transaction('servers', 'readwrite').objectStore('servers');
   // delete the server as it was
   var deleteRequest = store.delete(editedServer.ruid);
@@ -190,7 +198,7 @@ function saveServer() {
   var request = store.add(object);
   request.onsuccess = function () {
     // Update the server entry
-    updateServer(object.host, object.port, object.type, object.username, object.password, editedServer.ruid);
+    updateServer(object.host, object.port, object.type, object.username, object.password, editedServer.ruid, object.hostkey);
   };
   request.onerror = function () {
     console.log("DB Object Creation Error");
@@ -200,11 +208,11 @@ function saveServer() {
   document.getElementById("serverlist").style.display = "block";
 }
 
-function updateServer(host, port, type, username, password, ruid) {
+function updateServer(host, port, type, username, password, ruid, hostkey) {
   // if this is a new server
   if (!servers[ruid]) {
     // Add it to the servers object as a new server
-    servers[ruid] = new Server(host, port, username, password, privateKey, type, ruid);
+    servers[ruid] = new Server(host, port, username, password, privateKey, type, ruid, hostkey);
     // Build a link for the server
     var item = document.getElementById("server").content;
     var link = item.querySelector("a");
