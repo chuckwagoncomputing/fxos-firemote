@@ -13,7 +13,15 @@ ssh2Connection.prototype = {
   observer : {
     version : 1,
     onSftpCache : function(buffer, new_key, cacheCallback) {
-      cacheCallback(confirm("This server has a host key we haven't seen before.\n" + new_key + "\nAccept this key?"));
+      var accept = confirm("This server has a host key we haven't seen before.\n" + new_key + "\nAccept this key?");
+      if (accept) {
+        cacheCallback('y');
+        var entry = this.client._host_keys._entries[0];
+        this.saveKey(entry.to_line());
+      }
+      else {
+        cacheCallback('');
+      }
     }
   },
   connect : function() {
@@ -24,8 +32,12 @@ ssh2Connection.prototype = {
     var timeout = 30;
     setTimeout(this.keepAlive.bind(this), 60000);
     this.client = new paramikojs.SSHClient();
+    this.observer.client = this.client;
+    if (this.hostkey) {
+      this.client._host_keys._entries.push(new paramikojs.HostKeyEntry().from_line(this.hostkey));
+    }
     this.client.set_missing_host_key_policy(new paramikojs.AskPolicy());
-    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, null, null, this.timeout, false, false, false, this.hostkey);
+    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, null, null, this.timeout, false);
     this.refreshRate = 10;
   },
   disconnect : function() {

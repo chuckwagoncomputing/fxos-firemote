@@ -37,6 +37,10 @@ Server.prototype.createTerminalWindow = function(connection) {
   return terminal;
 };
 
+ssh2Connection.prototype.observer.saveKey = function(key) {
+  saveServer(activeServer.host, activeServer.port, activeServer.type, activeServer.username, activeServer.password, activeServer.ruid, key);
+}
+
 firemoteDB.onsuccess = function (){
   db = this.result;
 };
@@ -180,32 +184,29 @@ function editServer() {
   formTypeChange(editedServer.type);
 }
 
-function saveServer() {
+function saveServer(host, port, type, username, password, ruid, hostkey) {
   // Build an object for writing to the database
   // from the values in the entry fields
-  var object = { ruid : editedServer.ruid,
-                 host : document.getElementById("host").value,
-                 port : document.getElementById("port").value,
-                 type : document.getElementById("type").value,
-                 username : document.getElementById("username").value, 
-                 password : document.getElementById("password").value,
-                 hostkey : editedServer.hostkey};
+  var object = { ruid : ruid,
+                 host : host,
+                 port : port,
+                 type : type,
+                 username : username, 
+                 password : password,
+                 hostkey : hostkey};
   var store = db.transaction('servers', 'readwrite').objectStore('servers');
   // delete the server as it was
-  var deleteRequest = store.delete(editedServer.ruid);
+  var deleteRequest = store.delete(ruid);
   deleteRequest.onsuccess = function () { };
   // store the server as it is
   var request = store.add(object);
   request.onsuccess = function () {
     // Update the server entry
-    updateServer(object.host, object.port, object.type, object.username, object.password, editedServer.ruid, object.hostkey);
+    updateServer(host, port, type, username, password, ruid, hostkey);
   };
   request.onerror = function () {
     console.log("DB Object Creation Error");
   };
-  // hide the edit pane and show the server list
-  document.getElementById("editpane").style.display = "none";
-  document.getElementById("serverlist").style.display = "block";
 }
 
 function updateServer(host, port, type, username, password, ruid, hostkey) {
@@ -252,6 +253,7 @@ function updateServer(host, port, type, username, password, ruid, hostkey) {
     servers[ruid].type = type;
     servers[ruid].username = username;
     servers[ruid].password = password;
+    servers[ruid].hostkey = hostkey;
   }
 }
 
@@ -401,7 +403,18 @@ window.addEventListener("load", function() {
     document.getElementById("close").style.display = "none";
     document.getElementById("showdrawer").style.display = "block";
   });
-  document.getElementById("save").addEventListener("click", function () { saveServer(); });
+  document.getElementById("save").addEventListener("click", function () { 
+    saveServer(document.getElementById("host").value,
+               document.getElementById("port").value,
+               document.getElementById("type").value,
+               document.getElementById("username").value, 
+               document.getElementById("password").value,
+               editedServer.ruid,
+               editedServer.hostkey);
+    // hide the edit pane and show the server list
+    document.getElementById("editpane").style.display = "none";
+    document.getElementById("serverlist").style.display = "block";
+  });
   document.getElementById("delete").addEventListener("click", function () { deleteServer(); });
   document.getElementById("saveSettings").addEventListener("click", function () { saveSettings(); });
   document.getElementById("importkey").addEventListener("click", function () {
