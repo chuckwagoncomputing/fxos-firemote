@@ -30,6 +30,10 @@ ssh2Connection.prototype = {
     var methods = ['password', 'interactive', 'publickey', 'gssapi-mic', 'gssapi-keyex'];
     var gssapiOptions = {'host' : 'hostname', 'auth' : true, 'keyex' : true, 'deleg-cred' : true};
     var timeout = 30;
+    var pkey = null;
+    if (this.privateKey) {
+      pkey = new paramikojs.RSAKey(null, null, null, null, null, null, this.privateKey);
+    }
     setTimeout(this.keepAlive.bind(this), 60000);
     this.client = new paramikojs.SSHClient();
     this.observer.client = this.client;
@@ -37,7 +41,7 @@ ssh2Connection.prototype = {
       this.client._host_keys._entries.push(new paramikojs.HostKeyEntry().from_line(this.hostkey));
     }
     this.client.set_missing_host_key_policy(new paramikojs.AskPolicy());
-    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, null, null, this.timeout, false);
+    this.transport = this.client.connect(this.observer, this.write.bind(this), this.auth_success.bind(this), this.host, this.port, credentials.username, credentials.password, pkey, null, this.timeout, false);
     this.refreshRate = 10;
   },
   disconnect : function() {

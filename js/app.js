@@ -382,9 +382,9 @@ window.addEventListener("load", function() {
   height = Math.floor((document.getElementById("terminalframe").scrollHeight - 60) / 12);
   // If our IndexedDB instance is up and running, load servers and width settings.
   if (db) {
+    loadKey();
     loadServers();
     loadWidth();
-    loadKey();
   }
   // Hide server list and show setting pane
   document.getElementById("settings").addEventListener("click", function () {
@@ -423,7 +423,7 @@ window.addEventListener("load", function() {
     document.getElementById("keyfield").style.display = "block";
   });
   document.getElementById("generatekey").addEventListener("click", function () { generateKey(); });
-  document.getElementById("exportkey").addEventListener("click", function () { window.location = "mailto:?body='" + publicKey + "'" });
+  document.getElementById("exportkey").addEventListener("click", function () { window.location = "mailto:?body=" + publicKey });
   document.getElementById("deletekey").addEventListener("click", function () { deleteKey(); });
   document.getElementById("savekey").addEventListener("click", function () {
     publicKey = document.getElementById("publicfield").value;
