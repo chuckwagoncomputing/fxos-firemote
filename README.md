@@ -18,5 +18,5 @@ If you imported keys to Firemote manually, the exported key will be exactly as y
 If you used Firemote to generate keys, keep on reading.  
 Firemote generates RSA keys in PEM/PKCS8 format, so we need to convert the key to the standard OpenSSH public key format.  
 1. Copy and paste the key from the email into a new file.  
-2. Run `ssh-keygen -i -m PKCS8 -f <file name>`  
+2. Run `ssh-keygen -i -m PKCS8 -f <(sed -e 's/./&\n/418' -e 's/./&\n/26' <file name> | fold -w 64)`  
 3. The output will be in a format OpenSSH can use. Put in in authorized_keys on the server.  
