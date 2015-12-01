@@ -257,7 +257,7 @@ cli.prototype = {
 
   letterHeight : 14,
   letterWidth : 7.2,
-  defaultColor : '#33ff33',
+  defaultColor : 'white',
   defaultBGColor : 'black',
   font : "Andale Mono",
   fontSize : "12",

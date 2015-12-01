@@ -117,3 +117,5 @@ ssh2Connection.prototype = {
     }
   }
 };
+
+var gRsaKeyWorkerJs = '/js/paramikojs/sign_ssh_data_worker.js'
